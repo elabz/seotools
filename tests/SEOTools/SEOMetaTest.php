@@ -116,7 +116,7 @@ class SEOMetaTest extends BaseTest
         $this->seoMeta->setKeywords($keywords);
 
         $this->setRightAssertion($fullHeader);
-        $this->assertEquals($keywords, implode($this->seoMeta->getKeywords(), ','));
+        $this->assertEquals($keywords, implode(',', $this->seoMeta->getKeywords()));
     }
 
     public function test_add_keywords()
@@ -129,11 +129,11 @@ class SEOMetaTest extends BaseTest
         $this->seoMeta->addKeyword('makankosappo');
 
         $this->setRightAssertion($fullHeader);
-        $this->assertEquals('masenko, makankosappo', implode($this->seoMeta->getKeywords(), ', '));
+        $this->assertEquals('masenko, makankosappo', implode(', ', $this->seoMeta->getKeywords()));
 
         $this->seoMeta->addKeyword(['kienzan', 'tayoken']);
 
-        $this->assertEquals('kienzan, tayoken, masenko, makankosappo', implode($this->seoMeta->getKeywords(), ', '));
+        $this->assertEquals('kienzan, tayoken, masenko, makankosappo', implode(', ', $this->seoMeta->getKeywords()));
     }
 
     public function test_remove_metatag()
@@ -159,7 +159,7 @@ class SEOMetaTest extends BaseTest
     {
         $fullHeader = "<title>It's Over 9000!</title>";
         $fullHeader .= "<meta name=\"description\" content=\"For those who helped create the Genki Dama\">";
-        $fullHeader .= "<link rel=\"canonical\" href=\"http://domain.com\"/>";
+        $fullHeader .= "<link rel=\"canonical\" href=\"http://domain.com\">";
         $canonical = 'http://domain.com';
 
         $this->seoMeta->setCanonical($canonical);
@@ -168,11 +168,55 @@ class SEOMetaTest extends BaseTest
         $this->assertEquals($canonical, $this->seoMeta->getCanonical());
     }
 
+    public static function dataTestUrls()
+    {
+        return [
+            ['http://localhost/hello/world', 'http://localhost/hello/world'],
+            ['http://localhost/hello/world?param=1', 'http://localhost/hello/world'],
+        ];
+    }
+
+    /**
+     * @dataProvider dataTestUrls
+     */
+    public function test_get_canonical_null($fullUrl)
+    {
+        config()->set('defaults.canonical', null);
+        $this->seoMeta = new SEOMeta(config());
+
+        $this->get($fullUrl);
+        $this->assertEquals($fullUrl, $this->seoMeta->getCanonical());
+    }
+
+    /**
+     * @dataProvider dataTestUrls
+     */
+    public function test_get_canonical_full($fullUrl)
+    {
+        config()->set('defaults.canonical', 'full');
+        $this->seoMeta = new SEOMeta(config());
+
+        $this->get($fullUrl);
+        $this->assertEquals($fullUrl, $this->seoMeta->getCanonical());
+    }
+
+    /**
+     * @dataProvider dataTestUrls
+     */
+    public function test_get_canonical_current($fullUrl, $currentUrl)
+    {
+        config()->set('defaults.canonical', 'current');
+        $this->seoMeta = new SEOMeta(config());
+
+        $this->get($fullUrl);
+        $this->assertEquals($currentUrl, $this->seoMeta->getCanonical());
+    }
+
     public function test_set_amp()
     {
         $fullHeader = "<title>It's Over 9000!</title>";
         $fullHeader .= "<meta name=\"description\" content=\"For those who helped create the Genki Dama\">";
-        $fullHeader .= "<link rel=\"amphtml\" href=\"http://domain.com/amp\"/>";
+        $fullHeader .= "<link rel=\"amphtml\" href=\"http://domain.com/amp\">";
         $amphtml = 'http://domain.com/amp';
 
         $this->seoMeta->setAmpHtml($amphtml);
@@ -185,7 +229,7 @@ class SEOMetaTest extends BaseTest
     {
         $fullHeader = "<title>It's Over 9000!</title>";
         $fullHeader .= "<meta name=\"description\" content=\"For those who helped create the Genki Dama\">";
-        $fullHeader .= "<link rel=\"next\" href=\"http://domain.com\"/>";
+        $fullHeader .= "<link rel=\"next\" href=\"http://domain.com\">";
         $next = 'http://domain.com';
 
         $this->seoMeta->setNext($next);
@@ -198,7 +242,7 @@ class SEOMetaTest extends BaseTest
     {
         $fullHeader = "<title>It's Over 9000!</title>";
         $fullHeader .= "<meta name=\"description\" content=\"For those who helped create the Genki Dama\">";
-        $fullHeader .= "<link rel=\"prev\" href=\"http://domain.com\"/>";
+        $fullHeader .= "<link rel=\"prev\" href=\"http://domain.com\">";
         $prev = 'http://domain.com';
 
         $this->seoMeta->setPrev($prev);
@@ -207,11 +251,11 @@ class SEOMetaTest extends BaseTest
         $this->assertEquals($prev, $this->seoMeta->getPrev());
     }
 
-    public function test_set_alternate_languages()
+    public function test_add_alternate_languages()
     {
         $fullHeader = "<title>It's Over 9000!</title>";
         $fullHeader .= "<meta name=\"description\" content=\"For those who helped create the Genki Dama\">";
-        $fullHeader .= "<link rel=\"alternate\" hreflang=\"en\" href=\"http://domain.com\"/>";
+        $fullHeader .= "<link rel=\"alternate\" hreflang=\"en\" href=\"http://domain.com\">";
         $lang = 'en';
         $langUrl = 'http://domain.com';
 
@@ -224,6 +268,70 @@ class SEOMetaTest extends BaseTest
         $this->seoMeta->addAlternateLanguages($expectedLangs);
 
         $this->assertEquals(array_merge($expectedLangs, $expectedLangs), $this->seoMeta->getAlternateLanguages());
+    }
+
+    public function test_set_alternate_languages()
+    {
+        $fullHeader = "<title>It's Over 9000!</title>";
+        $fullHeader .= "<meta name=\"description\" content=\"For those who helped create the Genki Dama\">";
+        $fullHeader .= "<link rel=\"alternate\" hreflang=\"en\" href=\"http://domain.com\">";
+        $lang = 'en';
+        $langUrl = 'http://domain.com';
+
+        $expectedLangs = [['lang' => $lang, 'url' => $langUrl]];
+        $this->seoMeta->setAlternateLanguage($lang, $langUrl);
+
+        $this->setRightAssertion($fullHeader);
+        $this->assertEquals($expectedLangs, $this->seoMeta->getAlternateLanguages());
+
+        $this->seoMeta->setAlternateLanguages($expectedLangs);
+
+        $this->assertEquals($expectedLangs, $this->seoMeta->getAlternateLanguages());
+    }
+
+    public function test_set_override_alternate_language()
+    {
+        $fullHeader = "<title>It's Over 9000!</title>";
+        $fullHeader .= "<meta name=\"description\" content=\"For those who helped create the Genki Dama\">";
+        $fullHeader .= "<link rel=\"alternate\" hreflang=\"en\" href=\"http://domain.test\">";
+        $lang = 'en';
+        $langUrl = 'http://domain.com';
+        $langUrlOverridden = 'http://domain.test';
+
+        $expectedLangs = [['lang' => $lang, 'url' => $langUrl]];
+        $expectedLangsOverridden = [['lang' => $lang, 'url' => $langUrlOverridden]];
+
+        $this->seoMeta->setAlternateLanguage($lang, $langUrl);
+        $this->assertEquals($expectedLangs, $this->seoMeta->getAlternateLanguages());
+
+        $this->seoMeta->setAlternateLanguage($lang, $langUrlOverridden);
+        $this->setRightAssertion($fullHeader);
+        $this->assertEquals($expectedLangsOverridden, $this->seoMeta->getAlternateLanguages());
+    }
+
+    public function test_remove_alternate_language()
+    {
+        $fullHeader = "<title>It's Over 9000!</title>";
+        $fullHeader .= "<meta name=\"description\" content=\"For those who helped create the Genki Dama\">";
+        $lang = 'en';
+        $langUrl = 'http://domain.com';
+
+        $expectedLangs = [['lang' => $lang, 'url' => false]];
+
+        $this->seoMeta->setAlternateLanguage($lang, $langUrl);
+        $this->seoMeta->setAlternateLanguage($lang, false);
+        $this->setRightAssertion($fullHeader);
+        $this->assertEquals($expectedLangs, $this->seoMeta->getAlternateLanguages());
+    }
+
+    public function test_remove_alternate_languages()
+    {
+        $fullHeader = "<title>It's Over 9000!</title>";
+        $fullHeader .= "<meta name=\"description\" content=\"For those who helped create the Genki Dama\">";
+
+        $this->seoMeta->setAlternateLanguages([]);
+        $this->setRightAssertion($fullHeader);
+        $this->assertEquals([], $this->seoMeta->getAlternateLanguages());
     }
 
     public function test_set_reset()

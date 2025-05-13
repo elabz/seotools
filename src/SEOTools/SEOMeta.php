@@ -160,11 +160,11 @@ class SEOMeta implements MetaTagsContract
         }
 
         if (!empty($keywords)) {
-            
+
             if($keywords instanceof \Illuminate\Support\Collection){
                 $keywords = $keywords->toArray();
             }
-            
+
             $keywords = implode(', ', $keywords);
             $html[] = "<meta name=\"keywords\" content=\"{$keywords}\">";
         }
@@ -182,23 +182,25 @@ class SEOMeta implements MetaTagsContract
         }
 
         if ($canonical) {
-            $html[] = "<link rel=\"canonical\" href=\"{$canonical}\"/>";
+            $html[] = "<link rel=\"canonical\" href=\"{$canonical}\">";
         }
 
         if ($amphtml) {
-            $html[] = "<link rel=\"amphtml\" href=\"{$amphtml}\"/>";
+            $html[] = "<link rel=\"amphtml\" href=\"{$amphtml}\">";
         }
 
         if ($prev) {
-            $html[] = "<link rel=\"prev\" href=\"{$prev}\"/>";
+            $html[] = "<link rel=\"prev\" href=\"{$prev}\">";
         }
 
         if ($next) {
-            $html[] = "<link rel=\"next\" href=\"{$next}\"/>";
+            $html[] = "<link rel=\"next\" href=\"{$next}\">";
         }
 
         foreach ($languages as $lang) {
-            $html[] = "<link rel=\"alternate\" hreflang=\"{$lang['lang']}\" href=\"{$lang['url']}\"/>";
+            if (!empty($lang['lang'] && !empty($lang['url']))) {
+                $html[] = "<link rel=\"alternate\" hreflang=\"{$lang['lang']}\" href=\"{$lang['url']}\">";
+            }
         }
 
         if ($robots) {
@@ -215,7 +217,7 @@ class SEOMeta implements MetaTagsContract
     {
         // open redirect vulnerability fix
         $title = str_replace(['http-equiv=', 'url='], '', $title);
-        
+
         // clean title
         $title = strip_tags($title);
 
@@ -388,6 +390,32 @@ class SEOMeta implements MetaTagsContract
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function setAlternateLanguage($lang, $url)
+    {
+        // Remove language if already existing
+        $this->alternateLanguages = array_filter($this->alternateLanguages, function ($arr) use ($lang) {
+            return $arr['lang'] !== $lang;
+        });
+
+        // Append (updated) language
+        $this->alternateLanguages[] = ['lang' => $lang, 'url' => $url];
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setAlternateLanguages(array $languages)
+    {
+        $this->alternateLanguages = $languages;
+
+        return $this;
+    }
+
+    /**
      * Sets the meta robots.
      *
      * @param string $robots
@@ -470,9 +498,19 @@ class SEOMeta implements MetaTagsContract
      */
     public function getCanonical()
     {
+        if ($this->canonical) {
+            return $this->canonical;
+        }
+
         $canonical_config = $this->config->get('defaults.canonical', false);
 
-        return $this->canonical ?: (($canonical_config === null) ? app('url')->full() : $canonical_config);
+        if ($canonical_config === null || $canonical_config === 'full') {
+            return htmlspecialchars(app('url')->full());
+        } elseif ($canonical_config === 'current') {
+            return htmlspecialchars(app('url')->current());
+        }
+
+        return $canonical_config;
     }
 
     /**

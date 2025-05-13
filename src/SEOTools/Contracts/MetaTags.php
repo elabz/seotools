@@ -134,7 +134,7 @@ interface MetaTags
      * Add a custom meta tag.
      *
      * @param string|array $meta
-     * @param string       $value
+     * @param string|null  $value
      * @param string       $name
      *
      * @return static
@@ -186,6 +186,25 @@ interface MetaTags
      * @return static
      */
     public function addAlternateLanguages(array $languages);
+
+    /**
+     * Set an alternate language.
+     *
+     * @param string $lang language code in format ISO 639-1
+     * @param string $url
+     *
+     * @return static
+     */
+    public function setAlternateLanguage($lang, $url);
+
+    /**
+     * Set alternate languages.
+     *
+     * @param array $languages
+     *
+     * @return static
+     */
+    public function setAlternateLanguages(array $languages);
 
     /**
      * Get the title formatted for display.

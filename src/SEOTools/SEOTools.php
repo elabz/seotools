@@ -3,6 +3,8 @@
 namespace Artesaos\SEOTools;
 
 use Artesaos\SEOTools\Contracts\SEOTools as SEOContract;
+use Artesaos\SEOTools\Integrations\Inertia;
+use Illuminate\Support\Traits\Macroable;
 
 /**
  * SEOTools provides implementation for `SEOTools` contract.
@@ -11,6 +13,8 @@ use Artesaos\SEOTools\Contracts\SEOTools as SEOContract;
  */
 class SEOTools implements SEOContract
 {
+    use Macroable;
+
     /**
      * {@inheritdoc}
      */
@@ -59,7 +63,7 @@ class SEOTools implements SEOContract
         $this->metatags()->setTitle($title, $appendDefault);
         $this->opengraph()->setTitle($title);
         $this->twitter()->setTitle($title);
-        $this->jsonLd()->setTitle($title);
+        $this->jsonLdMulti()->setTitle($title);
 
         return $this;
     }
@@ -72,7 +76,7 @@ class SEOTools implements SEOContract
         $this->metatags()->setDescription($description);
         $this->opengraph()->setDescription($description);
         $this->twitter()->setDescription($description);
-        $this->jsonLd()->setDescription($description);
+        $this->jsonLdMulti()->setDescription($description);
 
         return $this;
     }
@@ -100,7 +104,7 @@ class SEOTools implements SEOContract
 
         $this->twitter()->setImage($urls);
 
-        $this->jsonLd()->addImage($urls);
+        $this->jsonLdMulti()->addImage($urls);
 
         return $this;
     }
@@ -128,8 +132,13 @@ class SEOTools implements SEOContract
         $html .= PHP_EOL;
         $html .= $this->twitter()->generate();
         $html .= PHP_EOL;
-        // if json ld multi is use don't show simple json ld
-        $html .= $this->jsonLdMulti()->generate() ?? $this->jsonLd()->generate();
+
+        // Use jsonLdMulti by default; since it is just a wrapper
+        $html .= $this->jsonLdMulti()->generate();
+
+        if (config('seotools.inertia') === true) {
+            $html = app(Inertia::class)->convertHeadToInertiaStyle($html);
+        }
 
         return ($minify) ? str_replace(PHP_EOL, '', $html) : $html;
     }

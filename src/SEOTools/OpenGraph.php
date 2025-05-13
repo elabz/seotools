@@ -222,8 +222,13 @@ class OpenGraph implements OpenGraphContract
         foreach ($properties as $property => $value) {
             // multiple properties
             if (is_array($value)) {
-                $subListPrefix = (is_string($property)) ? $property : $prefix;
-                $subList = $this->eachProperties($value, $subListPrefix);
+                if (is_string($property)){
+                    $subListPrefix = $prefix.":".$property;
+                    $subList = $this->eachProperties($value, $subListPrefix, false);
+                } else {
+                    $subListPrefix = (is_string($property)) ? $property : $prefix;
+                    $subList = $this->eachProperties($value, $subListPrefix);
+                }
 
                 $html[] = $subList;
             } else {
@@ -258,14 +263,34 @@ class OpenGraph implements OpenGraphContract
      */
     protected function makeTag($key = null, $value = null, $ogPrefix = false)
     {
-        $value = str_replace(['http-equiv=', 'url='], '', $value);
         return sprintf(
-            '<meta property="%s%s" content="%s" />%s',
+            '<meta property="%s%s" content="%s">%s',
             $ogPrefix ? $this->og_prefix : '',
             strip_tags($key),
-            strip_tags($value),
+            $this->cleanTagValue($value),
             PHP_EOL
         );
+    }
+
+    /**
+     * Clean og tag value
+     *
+     * @param string $value    meta property value
+     *
+     * @return string
+     */
+    protected function cleanTagValue($value)
+    {
+        // Safety
+        $value = str_replace(['http-equiv=', 'url='], '', $value);
+
+        // Escape double quotes
+        $value = htmlspecialchars($value, ENT_QUOTES, null, false);
+
+        // Clean
+        $value = strip_tags($value);
+
+        return $value;
     }
 
     /**
@@ -619,6 +644,7 @@ class OpenGraph implements OpenGraphContract
 
     /**
      * Set product properties.
+     * Reference: https://developers.facebook.com/docs/marketing-api/catalog/reference/#example-feeds
      *
      * @param array $attributes opengraph product attributes
      *
@@ -627,25 +653,58 @@ class OpenGraph implements OpenGraphContract
     public function setProduct($attributes = [])
     {
         $validkeys = [
+            // Required
+            'brand',
+            'availability',
+            'condition',
+
+            // Conditionally required
+            'locale',
+            'plural_title',
+
+            // Conditionally required: https://developers.facebook.com/docs/payments/product/
+            'price:amount', // Required if Static Pricing & not Dynamic Pricing
+            'price:currency', // Required if Static Pricing & not Dynamic Pricing
+
+            // Optional
+            'catalog_id',
+            'item_group_id',
+            'category',
+            'gender',
+            'gtin',
+            'isbn',
+            'mfr_part_no',
+            'retailer_item_id',
+
+            'sale_price:amount',
+            'sale_price:currency',
+            'sale_price_dates:start',
+            'sale_price_dates:end',
+
+
+            // Optional - extra
+            'custom_label_0',
+            'custom_label_1',
+            'custom_label_2',
+            'custom_label_3',
+            'custom_label_4',
+
+
+            // Deprecated
             'original_price:amount',
             'original_price:currency',
             'pretax_price:amount',
             'pretax_price:currency',
-            'price:amount',
-            'price:currency',
             'shipping_cost:amount',
             'shipping_cost:currency',
             'weight:value',
             'weight:units',
             'shipping_weight:value',
             'shipping_weight:units',
-            'sale_price:amount',
-            'sale_price:currency',
-            'sale_price_dates:start',
-            'sale_price_dates:end'
         ];
 
         $this->setProperties('product', 'productProperties', $attributes, $validkeys);
+
         return $this;
     }
 
@@ -716,6 +775,7 @@ class OpenGraph implements OpenGraphContract
             'type',
             'width',
             'height',
+            'alt',
         ];
 
         if (is_array($source)) {

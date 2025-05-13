@@ -44,6 +44,8 @@ composer require artesaos/seotools
 
 You need to update your application configuration in order to register the package so it can be loaded by Laravel, just update your `config/app.php` file adding the following code at the end of your `'providers'` section:
 
+> **Note**: If you are using Laravel 11+, you will have to update `bootstrap/providers.php` instead. [Package Discovery](https://laravel.com/docs/12.x/packages#package-discovery).
+
 > `config/app.php`
 
 ```php
@@ -136,15 +138,15 @@ In `seotools.php` configuration file you can determine the properties of the def
 
 #### seotools.php
 
-- meta
- - **defaults** - What values are displayed if not specified any value for the page display. If the value is `false`, nothing is displayed.
- - **webmaster** - Are the settings of tags values for major webmaster tools. If you are `null` nothing is displayed.
-- opengraph
- - **defaults** - Are the properties that will always be displayed and when no other value is set instead. **You can add additional tags** that are not included in the original configuration file.
-- twitter
- - **defaults** - Are the properties that will always be displayed and when no other value is set instead. **You can add additional tags** that are not included in the original configuration file.
-- json-ld
- - **defaults** - Are the properties that will always be displayed and when no other value is set instead. **You can add additional tags** that are not included in the original configuration file.
+- **meta**
+   - `defaults` - What values are displayed if not specified any value for the page display. If the value is `false`, nothing is displayed.
+   - `webmaster` - Are the settings of tags values for major webmaster tools. If you are `null` nothing is displayed.
+- **opengraph**
+   - `defaults` - Are the properties that will always be displayed and when no other value is set instead. **You can add additional tags** that are not included in the original configuration file.
+- **twitter**
+   - `defaults` - Are the properties that will always be displayed and when no other value is set instead. **You can add additional tags** that are not included in the original configuration file.
+- **json-ld**
+   - `defaults` - Are the properties that will always be displayed and when no other value is set instead. **You can add additional tags** that are not included in the original configuration file.
 
 Usage
 -----
@@ -197,7 +199,7 @@ use Artesaos\SEOTools\Facades\JsonLdMulti;
 // OR
 use Artesaos\SEOTools\Facades\SEOTools;
 
-class CommomController extends Controller
+class CommonController extends Controller
 {
     public function index()
     {
@@ -253,7 +255,7 @@ class CommomController extends Controller
         OpenGraph::addImage($post->images->list('url'));
         OpenGraph::addImage(['url' => 'http://image.url.com/cover.jpg', 'size' => 300]);
         OpenGraph::addImage('http://image.url.com/cover.jpg', ['height' => 300, 'width' => 300]);
-        
+
         JsonLd::setTitle($post->title);
         JsonLd::setDescription($post->resume);
         JsonLd::setType('Article');
@@ -432,7 +434,7 @@ namespace App\Http\Controllers;
 
 use Artesaos\SEOTools\Traits\SEOTools as SEOToolsTrait;
 
-class CommomController extends Controller
+class CommonController extends Controller
 {
     use SEOToolsTrait;
 
@@ -485,30 +487,30 @@ class CommomController extends Controller
 <html>
 <head>
     <title>Title - Over 9000 Thousand!</title>
-    <meta name='description' itemprop='description' content='description...' />
-    <meta name='keywords' content='key1, key2, key3' />
-    <meta property='article:published_time' content='2015-01-31T20:30:11-02:00' />
-    <meta property='article:section' content='news' />
+    <meta name='description' itemprop='description' content='description...'>
+    <meta name='keywords' content='key1, key2, key3'>
+    <meta property='article:published_time' content='2015-01-31T20:30:11-02:00'>
+    <meta property='article:section' content='news'>
 
-    <meta property="og:description"content="description..." />
-    <meta property="og:title"content="Title" />
-    <meta property="og:url"content="http://current.url.com" />
-    <meta property="og:type"content="article" />
-    <meta property="og:locale"content="pt-br" />
-    <meta property="og:locale:alternate"content="pt-pt" />
-    <meta property="og:locale:alternate"content="en-us" />
-    <meta property="og:site_name"content="name" />
-    <meta property="og:image"content="http://image.url.com/cover.jpg" />
-    <meta property="og:image"content="http://image.url.com/img1.jpg" />
-    <meta property="og:image"content="http://image.url.com/img2.jpg" />
-    <meta property="og:image"content="http://image.url.com/img3.jpg" />
-    <meta property="og:image:url"content="http://image.url.com/cover.jpg" />
-    <meta property="og:image:size"content="300" />
+    <meta property="og:description" content="description...">
+    <meta property="og:title" content="Title">
+    <meta property="og:url" content="http://current.url.com">
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="pt-br">
+    <meta property="og:locale:alternate" content="pt-pt">
+    <meta property="og:locale:alternate" content="en-us">
+    <meta property="og:site_name" content="name">
+    <meta property="og:image" content="http://image.url.com/cover.jpg">
+    <meta property="og:image" content="http://image.url.com/img1.jpg">
+    <meta property="og:image" content="http://image.url.com/img2.jpg">
+    <meta property="og:image" content="http://image.url.com/img3.jpg">
+    <meta property="og:image:url" content="http://image.url.com/cover.jpg">
+    <meta property="og:image:size" content="300">
 
-    <meta name="twitter:card"content="summary" />
-    <meta name="twitter:title"content="Title" />
-    <meta name="twitter:site"content="@LuizVinicius73" />
-    
+    <meta name="twitter:card"content="summary">
+    <meta name="twitter:title"content="Title">
+    <meta name="twitter:site"content="@LuizVinicius73">
+
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","name":"Title - Over 9000 Thousand!"}</script>
     <!-- OR with multi -->
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","name":"Title - Over 9000 Thousand!"}</script>
@@ -518,6 +520,27 @@ class CommomController extends Controller
 
 </body>
 </html>
+```
+
+#### Using Macro
+Using the same code in multiple places can be tedious, which is why this package includes a Macroable trait. This trait allows additional functionality to be added to a class that was not defined in the class definition, using a simple trait.
+
+For example, imagine that you need to add meta titles and descriptions for your pages. You can add your Macroable functions in the AppServiceProvider or create a dedicated file for this purpose, and define your function as shown in the code snippet:
+```php
+    SEOTools::macro('webPage', function (string $title, string $description) {
+        SEOMeta::setTitle($title);
+        SEOMeta::setDescription($description);
+        SEOMeta::setCanonical('http://current.url.com');
+        OpenGraph::setDescription($description);
+        OpenGraph::setTitle($title);
+        OpenGraph::setUrl('http://current.url.com');
+        OpenGraph::addProperty('type', 'webpage');
+    });
+```
+
+In your controller, you can use the following code to utilize the function:
+```php
+    SEOTools::webPage('Page title', 'Page description');
 ```
 
 #### API (SEOMeta)
@@ -531,6 +554,8 @@ SEOMeta::addKeyword($keyword);
 SEOMeta::addMeta($meta, $value = null, $name = 'name');
 SEOMeta::addAlternateLanguage($lang, $url);
 SEOMeta::addAlternateLanguages(array $languages);
+SEOMeta::setAlternateLanguage($lang, $url);
+SEOMeta::setAlternateLanguages(array $languages);
 SEOMeta::setTitleSeparator($separator);
 SEOMeta::setTitle($title);
 SEOMeta::setTitleDefault($default);
@@ -714,7 +739,7 @@ Missing Features
 ----------------
 
 There are many SEO-related features, which you may need for your project. While this package provides support for the basic ones,
-other are out of its scope. You'll have to use separated packages fot their integration.
+other are out of its scope. You'll have to use separate packages for their integration.
 
 ### SiteMap
 
